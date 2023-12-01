@@ -3,19 +3,20 @@ use std::fs::File;
 use std::io::prelude::*;
 use regex::Regex;
 
-// extract the first numeric digit from a string, convert to int
+/// Extract the first numeric digit from a string, convert to int
 fn first_number(input: &str) -> char {
     input.chars().find(|c| c.is_digit(10)).unwrap()
 }
 
-fn first_number_corrected(input: &str, num_dict: &HashMap<String, &str>, re: &Regex) -> char {
-    let replaced = re.replace_all(&input, |caps: &regex::Captures| {
-        num_dict.get(caps.get(0).unwrap().as_str()).unwrap()
+/// Replace characters based on the regex and replacement dict, then extract the first numeric digit from the result.
+fn first_number_corrected(input: &str, replacement_dict: &HashMap<String, &str>, re: &Regex) -> char {
+    let replaced = re.replace_all(&input, |captures: &regex::Captures| {
+        replacement_dict.get(captures.get(0).unwrap().as_str()).unwrap()
     });
     replaced.chars().find(|c| c.is_digit(10)).unwrap()
 }
 
-// run first_number on each line of a file
+/// Find the first and last numeric digit in each line, combine them into a number, sum the numbers.
 fn part_one()->i32 {
     let filename = "input.txt";
     let mut file = File::open(filename).expect("Unable to open file");
@@ -33,8 +34,12 @@ fn part_one()->i32 {
     sum
 }
 
-
+/// Find the first and last numeric digit OR written number in each line, combine them into a number, sum the numbers.
+/// 
+/// NOTE: Written numbers can overlap, such as twone which is 21.
+/// This is handled by searching forwards with the original regex matches, then backwards with reversed matches.
 fn part_two()->i32 {
+
     let filename = "input.txt";
     let mut file = File::open(filename).expect("Unable to open file");
     let mut contents = String::new();
@@ -68,6 +73,7 @@ fn part_two()->i32 {
     sum
 }
 
+/// AOC 2023 Day 1
 fn main() {
     let sum1 = part_one();
     println!("*********************************************");
