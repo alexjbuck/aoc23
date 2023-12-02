@@ -1,4 +1,4 @@
-# :christmas_tree: Advent of Code 2023 :christmas_tree:
+# 🎄 Advent of Code 2023 🎄
 
 Welcome to my solutions for the Advent of Code 2023! :star:
 
