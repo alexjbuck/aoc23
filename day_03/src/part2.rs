@@ -42,7 +42,7 @@ impl Schematic {
         // Regex match on all consecutive digits
         let number_pattern = Regex::new(r"\d+").unwrap();
         // Regex match on all non-digit and also non period (.) characters
-        let symbol_pattern = Regex::new(r"\D").unwrap();
+        let symbol_pattern = Regex::new(r"[^\d\.]").unwrap();
 
         for line in input.lines() {
             // println!("{}", line);
@@ -54,7 +54,7 @@ impl Schematic {
                 }).collect::<Vec<Number>>()
             );
             symbols.extend(
-                symbol_pattern.find_iter(line).filter(|m| m.as_str() != "." && m.as_str() != " ")
+                symbol_pattern.find_iter(line)
                 .map(|m| Symbol{char: String::from(m.as_str()), position: Position{row, start: m.start(), end: m.end()-1}})
                 .collect::<Vec<Symbol>>()
             );
