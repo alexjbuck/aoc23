@@ -1,4 +1,7 @@
-use indicatif::ProgressBar;
+use indicatif::{MultiProgress, ParallelProgressIterator, ProgressBar};
+use num::integer::lcm;
+use rayon::prelude::*;
+use std::sync::Arc;
 
 pub fn run() {
     let input = include_str!("input.txt");
@@ -7,7 +10,6 @@ pub fn run() {
 
 fn process(input: &str) -> usize {
     // Make a Cycle that loops through the chars of the first line of input
-    let mut steps = input.lines().next().unwrap().chars().cycle();
     let weak_nodes = input
         .lines()
         .skip(2)
@@ -17,31 +19,35 @@ fn process(input: &str) -> usize {
         .iter()
         .filter(|n| n.name.chars().nth(2).unwrap() == 'A')
         .collect::<Vec<_>>();
-    dbg!(&current.len());
-    dbg!(&weak_nodes.len());
-    let spinner = ProgressBar::new_spinner();
-    let mut step = 0;
-    while not_done(&current) {
-        spinner.tick();
-        let turn = steps.next();
-        current = current
-            .iter()
-            .map(|node| match turn {
-                Some('L') => weak_nodes.iter().find(|n| n.name == node.left).unwrap(),
-                Some('R') => weak_nodes.iter().find(|n| n.name == node.right).unwrap(),
-                _ => panic!("Invalid turn"),
-            })
-            .collect::<Vec<&WeakNode>>();
-        let final_chars = current
-            .iter()
-            .map(|n| n.name.chars().nth(2).unwrap().to_string())
-            .collect::<Vec<_>>()
-            .join("");
-        step += 1;
-        spinner.set_message(format!("Step {:6} => {}", step, final_chars));
-    }
-    spinner.finish();
-    step
+    dbg!(current.len());
+    dbg!(weak_nodes.len());
+
+    let multi_progress = Arc::new(MultiProgress::new());
+    let outer_pb: ProgressBar = multi_progress.add(ProgressBar::new(current.len() as u64));
+
+    current
+        .par_iter()
+        .progress_with(outer_pb)
+        .map(|node| {
+            let mut current = node.clone();
+            let mut steps = input.lines().next().unwrap().chars().cycle();
+            let spinner = multi_progress.add(ProgressBar::new_spinner());
+            let mut step = 0;
+            while current.name.chars().nth(2).unwrap() != 'Z' {
+                spinner.tick();
+                let turn = steps.next();
+                current = match turn {
+                    Some('L') => weak_nodes.iter().find(|n| n.name == current.left).unwrap(),
+                    Some('R') => weak_nodes.iter().find(|n| n.name == current.right).unwrap(),
+                    _ => panic!("Invalid turn"),
+                };
+                step += 1;
+                spinner.set_message(format!("Step {:6} => {}", step, &current.name));
+            }
+            spinner.finish();
+            step
+        })
+        .reduce(|| 1, |acc, step| lcm(acc, step))
 }
 
 fn not_done(current: &Vec<&WeakNode>) -> bool {
