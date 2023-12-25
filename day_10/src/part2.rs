@@ -3,7 +3,7 @@ pub fn run() {
     println!("Part 2: {}", process(input));
 }
 
-fn process(input: &str) -> usize {
+fn process(_input: &str) -> usize {
     6
 }
 
