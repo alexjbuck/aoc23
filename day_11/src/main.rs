@@ -1,3 +1,6 @@
+use day_11::{part1, part2};
+
 fn main() {
-    println!("Hello, world!");
+    part1::run();
+    part2::run();
 }
